@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graficador de Derivadas Parciales</title>
+    <link rel="icon" type="image/png" href="/img/favicon.png">
+    <!-- Librería Plotly para gráficas -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- Librería Math.js para cálculos matemáticos -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/10.0.1/math.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="../css/diseño.css">
+    
+</head>
+
+<body>
+    <div class="fondo"></div>
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-lg-3 col-md-2 col-sm-0 text-center"></div>
+            <div class="col-lg-6 col-md-8 col-sm-12 text-center card">
+                <h1 class="mt-3 mb-3">Graficador de Derivadas Parciales</h1>
+            </div>
+            <div class="col-lg-3 col-md-2 col-sm-0"></div>
+        </div>
+        
+        <div class="row text-center mb-2">
+            <div class="col-lg-3 col-md-2 col-sm-0 text-center"></div>
+            <div class="col-lg-6 col-md-8 col-sm-12 text-center card">
+                <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12">
+                        <label class="text mt-4 mb-1" for="funcion">Función original (f(x, y)):</label>
+                    </div>
+                    <div class="col-lg-5 col-md-5 col-sm-5 m-auto form-floating">
+                        <input class="form-control" type="text" id="funcion" placeholder="Ej: x^2 + y^2" autocomplete="off">
+                        <label for="funcion">Ej: x^2 + y^2</label>
+                    </div>                
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12">
+                        <label class="text mt-4" for="rangoX">Rango de x (mín y máx, separados por coma):</label>
+                    </div>
+                    <div class="col-lg-5 col-md-5 col-sm-5 m-auto form-floating">
+                        <input class="form-control" type="text" id="rangoX" placeholder="-10,10" autocomplete="off">
+                        <label for="rangoX">Ej: -10,10</label>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12">
+                        <label class="text mt-4" for="rangoY">Rango de y (mín y máx, separados por coma):</label>
+                    </div>
+                    <div class="col-lg-5 col-md-5 col-sm-5 m-auto form-floating">
+                        <input class="form-control" type="text" id="rangoY" placeholder="-10,10" autocomplete="off">
+                        <label for="rangoY">Ej: -10,10</label>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12">
+                        <button class="mt-4 mb-4 pointer btn btn-light" role="button" id="btn" disabled onclick="calcularYGraficar()">Graficar Función y Derivadas</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-2 col-sm-0 text-center"></div>
+        </div>
+
+        <div class="row mb-2">
+            <div class="col-lg-2 col-md-1 col-sm-0"></div>
+            <div class="col-lg-8 col-md-10 col-sm-12 text-center d-flex justify-content-center">
+                <div class="card" id="graficoOriginal" style="width: 600px; height: 400px;"></div>
+            </div>
+            <div class="col-lg-2 col-md-1 col-sm-0"></div>
+        </div>
+        <div class="row mb-2">
+            <div class="col-lg-6 col-md-6 col-sm-12 text-center d-flex justify-content-center mb-2">
+                <div class="card" id="graficoDerivadaX" style="width: 600px; height: 400px;"></div>
+            </div>
+            <div class="col-lg-6 col-md-6 col-sm-12 text-center d-flex justify-content-center mb-2">
+                <div class="card" id="graficoDerivadaY" style="width: 600px; height: 400px;"></div>
+            </div>
+        </div>
+        <div id="botonSalir" class="salir btn btn-danger mb-2">Salir</div>
+    </div>
+
+    <script>
+        // Función para graficar la ecuación original y sus derivadas parciales
+        function calcularYGraficar() {
+            let funcionInput = document.getElementById('funcion').value;
+
+            // Usamos math.js para compilar la función
+            let funcion = math.compile(funcionInput);
+
+            // Derivadas parciales con respecto a x e y
+            let derivadaX = math.derivative(funcionInput, 'x');
+            let derivadaY = math.derivative(funcionInput, 'y');
+
+            // Obtenemos el rango de x e y proporcionado por el usuario
+            let rangoX = document.getElementById('rangoX').value.split(',').map(Number);
+            let rangoY = document.getElementById('rangoY').value.split(',').map(Number);
+
+            let xMin = rangoX[0];
+            let xMax = rangoX[1];
+            let yMin = rangoY[0];
+            let yMax = rangoY[1];
+
+            // Generamos los valores para x, y y evaluamos la función y sus derivadas
+            let xValues = [];
+            let yValues = [];
+            let zOriginal = [];
+            let zDerivadaX = [];
+            let zDerivadaY = [];
+
+            // Evaluamos sobre la grilla de valores
+            for (let x = xMin; x <= xMax; x += 0.5) {
+                let zRowOriginal = [];
+                let zRowDerivadaX = [];
+                let zRowDerivadaY = [];
+
+                for (let y = yMin; y <= yMax; y += 0.5) {
+                    // Evaluamos la función original y las derivadas
+                    try {
+                        let zOriginalVal = funcion.evaluate({ x: x, y: y });
+                        let zDerivadaXVal = derivadaX.evaluate({ x: x, y: y });
+                        let zDerivadaYVal = derivadaY.evaluate({ x: x, y: y });
+
+                        zRowOriginal.push(zOriginalVal);
+                        zRowDerivadaX.push(zDerivadaXVal);
+                        zRowDerivadaY.push(zDerivadaYVal);
+                    } catch (err) {
+                        console.error(`Error al evaluar la función en (x=${x}, y=${y}):`, err);
+                        zRowOriginal.push(NaN);
+                        zRowDerivadaX.push(NaN);
+                        zRowDerivadaY.push(NaN);
+                    }
+                }
+
+                zOriginal.push(zRowOriginal);
+                zDerivadaX.push(zRowDerivadaX);
+                zDerivadaY.push(zRowDerivadaY);
+                xValues.push(x);
+            }
+
+            // Generar yValues como una grilla homogénea
+            for (let y = yMin; y <= yMax; y += 0.5) {
+                yValues.push(y);
+            }
+
+            // Graficar función original
+            Plotly.newPlot('graficoOriginal', [{
+                z: zOriginal,
+                x: xValues,
+                y: yValues,
+                type: 'surface',
+                colorscale: 'Viridis',
+                name: 'Función Original'
+            }], {
+                title: 'Función Original',
+                scene: { zaxis: { range: [-100, 100] } }
+            });
+
+            // Graficar derivada parcial con respecto a x
+            Plotly.newPlot('graficoDerivadaX', [{
+                z: zDerivadaX,
+                x: xValues,
+                y: yValues,
+                type: 'surface',
+                colorscale: 'Bluered',
+                name: 'Derivada parcial respecto a x'
+            }], {
+                title: 'Derivada Parcial f_x (x, y)',
+                scene: { zaxis: { range: [-100, 100] } }
+            });
+
+            // Graficar derivada parcial con respecto a y
+            Plotly.newPlot('graficoDerivadaY', [{
+                z: zDerivadaY,
+                x: xValues,
+                y: yValues,
+                type: 'surface',
+                colorscale: 'Electric',
+                name: 'Derivada parcial respecto a y'
+            }], {
+                title: 'Derivada Parcial f_y (x, y)',
+                scene: { zaxis: { range: [-100, 100] } }
+            });
+        }
+
+        let isInpt1 = false;
+        let isInpt2 = false;
+        let isInpt3 = false;
+
+
+        document.getElementById("funcion").addEventListener('keyup', () => {
+            
+            if (document.getElementById("funcion").value.length > 0) {
+                isInpt1 = true;
+            } else {
+                isInpt1 = false;
+            }
+            console.log(isInpt1)
+            enableBtn()
+        })
+        document.getElementById("rangoX").addEventListener('keyup', () => {
+            if (document.getElementById("rangoX").value.length > 0) {
+                isInpt2 = true;
+            } else {
+                isInpt2 = false;
+            }
+            console.log(isInpt2)
+            enableBtn()
+        })
+        document.getElementById("rangoY").addEventListener('keyup', () => {
+            if (document.getElementById("rangoY").value.length > 0) {
+                isInpt3 = true;
+            } else {
+                isInpt3 = false;
+            }
+            console.log(isInpt3)
+            enableBtn()
+        })
+
+        function enableBtn () {
+            if (isInpt1 && isInpt2 && isInpt3) {
+                document.getElementById("btn").disabled = false
+            } else {
+                document.getElementById("btn").disabled = true
+            }
+        }
+
+        document.getElementById("botonSalir").addEventListener("click", function() {
+            window.location.href = "../index.html";
+        });
+
+        
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+</body>
+</html>
